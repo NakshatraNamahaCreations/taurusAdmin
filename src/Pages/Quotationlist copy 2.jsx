@@ -12,7 +12,7 @@ import {
   Pagination,
   Badge,
 } from "react-bootstrap";
-import { FaEye, FaPlus, FaSort, FaSortUp, FaSortDown, FaSearch, FaFileAlt } from "react-icons/fa";
+import {  FaEye, FaPlus, FaSort, FaSortUp, FaSortDown,FaSearch,FaFileAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const ApiURL = "https://api.rentyourpc.com/api/quotations";
@@ -32,7 +32,8 @@ function QuotationList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [quotationsPerPage] = useState(5);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-
+  
+  // Use form state for client creation
   const [form, setForm] = useState({
     clientName: "",
     clientphoneNumber: "",
@@ -42,6 +43,8 @@ function QuotationList() {
     address: "",
     amount: "",
   });
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     clientId: "",
@@ -55,8 +58,7 @@ function QuotationList() {
     rentalType: "daily",
   });
 
-  const navigate = useNavigate();
-
+  // Fetch data
   const fetchQuotations = async () => {
     try {
       const res = await axios.get(`${ApiURL}/getallquotation`);
@@ -66,6 +68,8 @@ function QuotationList() {
       console.error(error);
     }
   };
+
+  console.log("productsList",productsList)
 
   const fetchProducts = async () => {
     try {
@@ -91,6 +95,7 @@ function QuotationList() {
     fetchClients();
   }, []);
 
+  // Search
   const handleSearch = (e) => {
     setSearch(e.target.value);
     const filtered = quotations.filter(
@@ -104,6 +109,7 @@ function QuotationList() {
     setCurrentPage(1);
   };
 
+  // Sort function
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -112,12 +118,19 @@ function QuotationList() {
     setSortConfig({ key, direction });
   };
 
+  // Apply sorting
   const sortedQuotations = [...filteredQuotations].sort((a, b) => {
     if (!sortConfig.key) return 0;
+    
     const aValue = a[sortConfig.key];
     const bValue = b[sortConfig.key];
-    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    
+    if (aValue < bValue) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
     return 0;
   });
 
@@ -133,11 +146,7 @@ function QuotationList() {
       setFormData({
         clientId: quotation.clientId,
         clientName: quotation.clientName,
-        products: quotation.products.map(p => ({
-          ...p,
-          // Ensure depositAmount is included if missing
-          depositAmount: p.depositAmount || 0
-        })),
+        products: quotation.products,
         transportCharges: Number(quotation.transportCharges),
         gst: Number(quotation.gst),
         discount: Number(quotation.discount),
@@ -173,7 +182,6 @@ function QuotationList() {
           unitPrice: 0,
           quantity: 1,
           availableQty: 0,
-          depositAmount: 0, // ✅ initialize
         };
       } else if (field === "productId") {
         const selectedProduct = productsList.find((prod) => prod._id === e.target.value);
@@ -183,7 +191,6 @@ function QuotationList() {
           productName: selectedProduct.productName,
           unitPrice: Number(selectedProduct.price),
           availableQty: selectedProduct.availableQty,
-          depositAmount: Number(selectedProduct.depositAmount || 0), // ✅ ← ADD THIS LINE
           quantity: 1,
         };
       } else if (field === "quantity") {
@@ -206,22 +213,23 @@ function QuotationList() {
     }
   };
 
+  // Add/remove product
   const addProductRow = () => {
     setFormData({
       ...formData,
       products: [
         ...formData.products,
-        { productType: "", productId: "", productName: "", unitPrice: 0, quantity: 1, availableQty: 0, depositAmount: 0 },
+        { productType: "", productId: "", productName: "", unitPrice: 0, quantity: 1, availableQty: 0 },
       ],
     });
   };
-
   const removeProductRow = (index) => {
     const updated = [...formData.products];
     updated.splice(index, 1);
     setFormData({ ...formData, products: updated });
   };
 
+  // Calculate Grand Total
   const calculateGrandTotal = () => {
     const subtotal = formData.products.reduce(
       (acc, p) => acc + Number(p.unitPrice) * Number(p.quantity),
@@ -233,6 +241,7 @@ function QuotationList() {
     return Math.round(subtotal + gstAmount + transport - discountAmount);
   };
 
+  // Client form handlers - using form state
   const handleClientChange = (e) => {
     setForm({
       ...form,
@@ -264,13 +273,13 @@ function QuotationList() {
     }
   };
 
+  // Submit quotation
   const handleSubmit = async () => {
-    try {
+    try { 
       const products = formData.products.map((p) => ({
         ...p,
         unitPrice: Number(p.unitPrice),
         quantity: Number(p.quantity),
-        depositAmount: Number(p.depositAmount || 0), // ✅ ← PRESERVE depositAmount HERE
         totalPrice: Number(p.unitPrice) * Number(p.quantity),
       }));
 
@@ -278,7 +287,10 @@ function QuotationList() {
       const gstAmount = (subtotal * Number(formData.gst || 0)) / 100;
       const discountAmount = (subtotal * Number(formData.discount || 0)) / 100;
       const transport = Number(formData.transportCharges || 0);
+
       const grandTotal = Math.round(subtotal + gstAmount + transport - discountAmount);
+
+      console.log("grandTotal inside function called",grandTotal)
 
       const payload = {
         ...formData,
@@ -286,8 +298,9 @@ function QuotationList() {
         transportCharges: transport,
         gst: Number(formData.gst || 0),
         discount: Number(formData.discount || 0),
-        grandTotal: grandTotal,
+        grandTotal: grandTotal, // ensure number
       };
+      console.log("payload",payload)
 
       if (editQuotation) {
         await axios.put(`${ApiURL}/editquotation/${editQuotation._id}`, payload, {
@@ -310,6 +323,7 @@ function QuotationList() {
     navigate(`/quotation-details/${id}`);
   };
 
+  // Get sort icon
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) {
       return <FaSort />;
@@ -384,7 +398,7 @@ function QuotationList() {
                   <td>
                     {q.products.map((p, i) => (
                       <div key={i} style={{ fontSize: "12px", marginBottom: "2px" }}>
-                        {p.productName} x {p.quantity} (Deposit: ₹{p.depositAmount})
+                        {p.productName} x {p.quantity}
                       </div>
                     ))}
                   </td>
@@ -463,6 +477,7 @@ function QuotationList() {
         </Modal.Header>
         <Modal.Body>
           <Form>
+            {/* Client & Rental Type */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
@@ -499,21 +514,23 @@ function QuotationList() {
               </Col>
             </Row>
 
+            {/* Start & End Date */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>Start Date</Form.Label>
-                  <Form.Control type="date" name="startDate" value={formData.startDate} onChange={handleChange} style={{ fontSize: "13px", height: "38px", backgroundColor: "#00000069" }} />
+                  <Form.Control type="date" name="startDate" value={formData.startDate} onChange={handleChange} style={{ fontSize: "13px", height: "38px",backgroundColor:"#00000069" }} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>End Date</Form.Label>
-                  <Form.Control type="date" name="endDate" value={formData.endDate} onChange={handleChange} style={{ fontSize: "13px", height: "38px", backgroundColor: "#00000069" }} />
+                  <Form.Control type="date" name="endDate" value={formData.endDate} onChange={handleChange} style={{ fontSize: "13px", height: "38px",backgroundColor:"#00000069" }} />
                 </Form.Group>
               </Col>
             </Row>
 
+            {/* Products */}
             {formData.products.map((p, index) => {
               const filteredProducts = productsList.filter(prod => prod.productType === p.productType);
               return (
@@ -543,9 +560,8 @@ function QuotationList() {
                     <Form.Control type="number" min={1} max={p.availableQty || 0} value={p.quantity || 1} onChange={(e) => handleChange(e, index, "quantity")} style={{ fontSize: "13px", height: "38px" }} />
                   </Col>
 
-                  {/* Optional: Show depositAmount in modal */}
-                  <Col md={2} className="d-flex align-items-center">
-                    <small>Dep: ₹{p.depositAmount || 0}</small>
+                  <Col md={2} className="d-flex justify-content-center">
+                    <Button variant="danger" size="sm" onClick={() => removeProductRow(index)}>Remove</Button>
                   </Col>
                 </Row>
               );
@@ -553,6 +569,7 @@ function QuotationList() {
 
             <Button variant="secondary" size="sm" onClick={addProductRow} className="mb-3">Add Product</Button>
 
+            {/* Charges */}
             <Row className="mb-3">
               <Col md={3}>
                 <Form.Group>

@@ -61,27 +61,6 @@ function Deliverychallan() {
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
-       <div style={{ maxWidth: '900px', margin: '0 auto 20px', textAlign: 'right' }}>
-      <button
-        onClick={() => window.print()}
-        style={{
-          backgroundColor: '#1e40af',
-          color: '#fff',
-          padding: '10px 18px',
-          border: 'none',
-          borderRadius: '6px',
-          fontSize: '14px',
-          cursor: 'pointer',
-          fontWeight: '600',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          transition: 'background 0.2s'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1e40af'}
-      >
-        🖨️ Print Challan
-      </button>
-    </div>
       <div ref={invoiceRef} style={{
         maxWidth: '900px',
         margin: '0 auto',

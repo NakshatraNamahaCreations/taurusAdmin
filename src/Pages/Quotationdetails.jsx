@@ -41,6 +41,8 @@ function QuotationDetails() {
 
   const isCancelled = quotation?.status === "cancelled";
 
+  console.log("quotation",quotation)
+
   const handleQuantityChange = (index, value) => {
     if (isCancelled) return;
     const newQty = Math.max(1, Number(value));
@@ -315,8 +317,12 @@ function QuotationDetails() {
   const subtotal = quotation.products.reduce((sum, p) => sum + p.totalPrice, 0);
   const gstAmount = (subtotal * quotation.gst) / 100;
   const discountAmount = (subtotal * quotation.discount) / 100;
-  const grandTotal = subtotal + quotation.transportCharges + gstAmount - discountAmount;
+  const totalDepositSimple = quotation.products.reduce((sum, p) => sum + (Number(p.depositAmount) || 0), 0);
+  const grandTotal = subtotal + quotation.transportCharges + gstAmount - discountAmount + totalDepositSimple;
+
   const noOfDays = calculateDays();
+
+  console.log("totalDepositSimple",totalDepositSimple)
 
   const getStatusBadge = (status) => {
     const base = { padding: "6px 16px", borderRadius: "20px", fontSize: "13px", fontWeight: "600" };
@@ -446,6 +452,8 @@ function QuotationDetails() {
       <Card className="border-0 mb-4" style={{ borderRadius: "16px", background: "#f8fafc" }}>
         <div className="p-4">
           <Row className="g-2 mb-3">
+            
+            <Col md={6} className="text-muted">Subtotal:</Col><Col md={6} className="text-end fw-medium">₹{totalDepositSimple.toLocaleString()}</Col>
             <Col md={6} className="text-muted">Subtotal:</Col><Col md={6} className="text-end fw-medium">₹{subtotal.toLocaleString()}</Col>
             <Col md={6} className="text-muted">Transport Charges:</Col><Col md={6} className="text-end fw-medium">₹{quotation.transportCharges?.toLocaleString() || "0"}</Col>
             <Col md={6} className="text-muted">GST ({quotation.gst}%):</Col><Col md={6} className="text-end fw-medium" style={{ color: "#3b82f6" }}>₹{gstAmount.toLocaleString()}</Col>

@@ -110,7 +110,9 @@ function Generateinvoice() {
   }
 
   const client = orderdata.clientId || {};
-  const clientAmount = orderdata.clientId.amount || 0;
+  // const totalDepositSimple = orderdata.clientId.amount || 0;
+  const totalDepositSimple = orderdata.products.reduce((sum, p) => sum + (Number(p.depositAmount) || 0), 0);
+
   const subtotal = orderdata.products.reduce(
     (sum, p) => sum + (p.totalPrice || p.unitPrice * p.quantity),
     0
@@ -118,7 +120,7 @@ function Generateinvoice() {
   const gstAmount = (subtotal * orderdata.gst) / 100;
   const discountAmount = (subtotal * orderdata.discount) / 100;
   const grandTotal =
-    subtotal + (orderdata.transportCharges || 0) + gstAmount - discountAmount + clientAmount;
+    subtotal + (orderdata.transportCharges || 0) + gstAmount - discountAmount + totalDepositSimple;
 
   return (
     <div
@@ -343,7 +345,7 @@ function Generateinvoice() {
           <div className="row">
             <div className="col-md-6">
                  <p>
-                <strong>Deposit amount:</strong> ₹{clientAmount.toLocaleString()}
+                <strong>Deposit amount:</strong> ₹{totalDepositSimple.toLocaleString()}
               </p>
               <p>
                 <strong>Subtotal:</strong> ₹{subtotal.toLocaleString()}

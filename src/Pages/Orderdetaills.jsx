@@ -83,14 +83,7 @@ function Orderdetails() {
   const isCancelled = quotation?.status === "cancelled";
   const isConfirmed = quotation?.status === "confirmed";
 
-  // const startEditingProduct = (product) => {
-  //   if (isCancelled || isConfirmed) return;
-  //   setEditingProductId(product.productId || product._id);
-  //   setEditProductName(product.productName);
-  //   setEditQuantity(product.quantity);
-  //   setEditStartDate(product.startDate ? new Date(product.startDate).toISOString().split('T')[0] : "");
-  //   setEditEndDate(product.endDate ? new Date(product.endDate).toISOString().split('T')[0] : "");
-  // };
+
 
   const startEditingProduct = (product) => {
   if (isCancelled || isConfirmed) return;
@@ -223,7 +216,9 @@ function Orderdetails() {
   }
 
   if (!quotation) return <div className="text-center mt-5">No Order Found</div>;
-const clientAmount = quotation.clientId.amount || 0;
+// const clientAmount = quotation.clientId.amount || 0;
+  const totalDepositSimple = quotation.products.reduce((sum, p) => sum + (Number(p.depositAmount) || 0), 0);
+
   const client = quotation.clientId || {};
   const subtotal = quotation.products.reduce(
     (sum, p) => sum + (p.totalPrice || p.unitPrice * p.quantity),
@@ -231,7 +226,7 @@ const clientAmount = quotation.clientId.amount || 0;
   );
   const gstAmount = (subtotal * quotation.gst) / 100;
   const discountAmount = (subtotal * quotation.discount) / 100;
-  const grandTotal = subtotal + (quotation.transportCharges || 0) + gstAmount - discountAmount + clientAmount;
+  const grandTotal = subtotal + (quotation.transportCharges || 0) + gstAmount - discountAmount + totalDepositSimple;
   
 
   const getStatusBadge = (status) => {
@@ -399,7 +394,7 @@ const clientAmount = quotation.clientId.amount || 0;
               <div className="d-flex align-items-center mb-2">
                   <strong className="me-2" style={{ fontSize: '14px', color: '#2c3e50' }}>Deposit Amount:</strong>
                   <span style={{ fontSize: '14px', color: '#27ae60', fontWeight: 'bold' }}>
-                    ₹{client.amount?.toLocaleString() || '0'}
+                    ₹{totalDepositSimple || '0'}
                   </span>
               </div>
             </Col>
@@ -473,40 +468,7 @@ const clientAmount = quotation.clientId.amount || 0;
                         )}
                       </td>
 
-                      {/* Start Date */}
-                      {/* <td className="text-center" style={{ padding: '12px' }}>
-                        {isEditing ? (
-                          <Form.Control
-                            type="date"
-                            value={editStartDate}
-                            onChange={(e) => setEditStartDate(e.target.value)}
-                            size="sm"
-                            className="form-control-sm"
-                            style={{ fontSize: '13px' }}
-                          />
-                        ) : p.startDate ? (
-                          new Date(p.startDate).toLocaleDateString()
-                        ) : (
-                          <span className="text-muted">-</span>
-                        )}
-                      </td>
-
-                      <td className="text-center" style={{ padding: '12px' }}>
-                        {isEditing ? (
-                          <Form.Control
-                            type="date"
-                            value={editEndDate}
-                            onChange={(e) => setEditEndDate(e.target.value)}
-                            size="sm"
-                            className="form-control-sm"
-                            style={{ fontSize: '13px' }}
-                          />
-                        ) : p.endDate ? (
-                          new Date(p.endDate).toLocaleDateString()
-                        ) : (
-                          <span className="text-muted">-</span>
-                        )}
-                      </td> */}
+                    
                       <td className="text-center" style={{ padding: "12px" }}>
   {isEditing ? (
     <Form.Control
@@ -515,7 +477,7 @@ const clientAmount = quotation.clientId.amount || 0;
       onChange={(e) => setEditStartDate(e.target.value)}
       size="sm"
       className="form-control-sm"
-      style={{ fontSize: "13px" }}
+      style={{ fontSize: "13px",backgroundColor:"lightgrey" }}
     />
   ) : p.startDate ? (
     new Date(p.startDate).toLocaleDateString()
@@ -686,6 +648,7 @@ const clientAmount = quotation.clientId.amount || 0;
                     nextPaymentDate: e.target.value,
                   })
                 }
+                style={{backgroundColor:"lightgrey"}}
               />
             </Form.Group>
           </Form>
@@ -720,7 +683,7 @@ const clientAmount = quotation.clientId.amount || 0;
                   Deposit Amount:
                 </span>
                 <span style={{ fontSize: '14px', color: '#e74c3c', fontWeight: 'bold' }}>
-                   ₹{client.amount?.toLocaleString() || '0'}
+                   ₹{totalDepositSimple || '0'}
                 </span>
               </div>
               <div className="d-flex justify-content-between mb-1">
